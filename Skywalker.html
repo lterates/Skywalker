@@ -1,0 +1,377 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Skywalker</title>
+    <link rel="icon" type="image/png" href="/favicon.png"/>
+    <script src="libs/three.min.js"></script>
+    <script src="libs/OrbitControls.js"></script>
+    <script src="libs/threex.domevents.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@600&display=swap" rel="stylesheet">  
+
+    <script type="text/javascript">
+        let renderer = null,
+            scene = null,
+            camera = null,
+            map = null,
+            sphere = null,
+            cloudSphere = null,
+            domEvents = null,
+            orbitSpeed = 0,
+            mercury = null;
+
+        window.onload = function init() {
+            // create the scene
+            createScene();
+
+            // create the Earth model, after loading the image
+            createEarth();
+
+            //SUN
+            let sunGeometry = new THREE.SphereGeometry(109, 64, 64)
+            let sunMaterial = new THREE.MeshLambertMaterial({
+                emissiveMap: new THREE.TextureLoader().load('sun.jpg'),
+                emissiveIntensity: 2,
+                emissive: 0xffffff})
+            sun = new THREE.Mesh(sunGeometry, sunMaterial)
+            sun.position.set(-250,10,0)
+            scene.add(sun)
+            
+            //MERCURY
+            let mercuryGeometry = new THREE.SphereGeometry(0.383, 64, 64)
+            let mercuryMaterial = new THREE.MeshLambertMaterial({
+                map: new THREE.TextureLoader().load('mercury.jpg')})
+            mercury = new THREE.Mesh(mercuryGeometry, mercuryMaterial)
+            mercury.position.set(-50,0,0)
+            scene.add(mercury)
+
+            //VENUS
+            let venusGeometry = new THREE.SphereGeometry(0.949, 128, 128)
+            let venusMaterial = new THREE.MeshLambertMaterial({
+                map: new THREE.TextureLoader().load('venusAtmos.jpg')})
+            venus = new THREE.Mesh(venusGeometry, venusMaterial)
+            venus.position.set(-25,0,0)
+            scene.add(venus)
+
+            //MARS
+            let marsGeometry = new THREE.SphereGeometry(0.53, 128, 128)
+            let marsMaterial = new THREE.MeshLambertMaterial({
+                map: new THREE.TextureLoader().load('mars.jpg'),})
+            mars = new THREE.Mesh(marsGeometry, marsMaterial)
+            mars.position.set(25,0,0)
+            scene.add(mars)
+
+            //JUPITER
+            let jupiterGeometry = new THREE.SphereGeometry(10.97, 256, 256)
+            let jupiterMaterial = new THREE.MeshLambertMaterial({
+                map: new THREE.TextureLoader().load('jupiter.jpg')})
+            jupiter = new THREE.Mesh(jupiterGeometry, jupiterMaterial)
+            jupiter.position.set(60,0,0)
+            scene.add(jupiter);
+
+            //SATURN
+            let saturnGeometry = new THREE.SphereGeometry(9.14, 256, 256)
+            let saturnMaterial = new THREE.MeshLambertMaterial({
+                map: new THREE.TextureLoader().load('saturn.jpg')})
+                saturn = new THREE.Mesh(saturnGeometry, saturnMaterial)
+            saturn.position.set(120,0,0)
+            scene.add(saturn)
+            let ringGeometry = new THREE.RingGeometry(10.5, 17.5, 64)
+            let ringMaterial = new THREE.MeshLambertMaterial({
+                map: new THREE.TextureLoader().load('rings.png'),side: THREE.DoubleSide, transparent: true})
+                rings = new THREE.Mesh(ringGeometry, ringMaterial)
+            rings.position.set(120,0,0)
+            rings.rotation.x = Math.PI/1.85
+            scene.add(rings)
+            rings.castShadow = true;
+
+            //URANUS
+            let uranusGeometry = new THREE.SphereGeometry(3.98, 128, 128)
+            let uranusMaterial = new THREE.MeshLambertMaterial({
+                map: new THREE.TextureLoader().load('uranus.jpg')})
+                uranus = new THREE.Mesh(uranusGeometry, uranusMaterial)
+                uranus.position.set(160,0,0)
+            scene.add(uranus)
+
+            //URANUS
+            let neptuneGeometry = new THREE.SphereGeometry(3.86, 128, 128)
+            let neptuneMaterial = new THREE.MeshLambertMaterial({
+                map: new THREE.TextureLoader().load('neptune.jpg')})
+                neptune = new THREE.Mesh(neptuneGeometry, neptuneMaterial)
+                neptune.position.set(190,0,0)
+            scene.add(neptune)
+
+            //MOON
+            let moonGeometry = new THREE.SphereGeometry(0.27, 512, 512)
+            let moonMaterial = new THREE.MeshPhongMaterial({
+                map: new THREE.TextureLoader().load('moon.jpg'),
+                bumpMap: new THREE.TextureLoader().load('moonDisplacement.jpg'),
+                bumpScale: 0.03})
+                moon = new THREE.Mesh(moonGeometry, moonMaterial)
+                moon.position.set(2.5,0,0)
+                //Synchronous Orbit with earth
+                moon.rotation.y = -3
+            scene.add(moon)
+            moon.castShadow = true;
+            moon.receiveShadow = true; 
+
+            //Event handlers using THREEx
+            domEvents.addEventListener(cloudSphere, 'mouseover', event => {document.getElementById("earth").style.display = "block"})
+            domEvents.addEventListener(cloudSphere, 'mouseout', event => {document.getElementById("earth").style.display = "none"})
+            
+            domEvents.addEventListener(sun, 'mouseover', event => {document.getElementById("sun").style.display = "block"})
+            domEvents.addEventListener(sun, 'mouseout', event => {document.getElementById("sun").style.display = "none"})
+            
+            domEvents.addEventListener(mercury, 'mouseover', event => {document.getElementById("mercury").style.display = "block"})
+            domEvents.addEventListener(mercury, 'mouseout', event => {document.getElementById("mercury").style.display = "none"})
+            
+            domEvents.addEventListener(venus, 'mouseover', event => {document.getElementById("venus").style.display = "block"})
+            domEvents.addEventListener(venus, 'mouseout', event => {document.getElementById("venus").style.display = "none"})
+            
+            domEvents.addEventListener(moon, 'mouseover', event => {document.getElementById("moon").style.display = "block"})
+            domEvents.addEventListener(moon, 'mouseout', event => {document.getElementById("moon").style.display = "none"})
+            
+            domEvents.addEventListener(mars, 'mouseover', event => {document.getElementById("mars").style.display = "block"})
+            domEvents.addEventListener(mars, 'mouseout', event => {document.getElementById("mars").style.display = "none"})
+            
+            domEvents.addEventListener(jupiter, 'mouseover', event => {document.getElementById("jupiter").style.display = "block"})
+            domEvents.addEventListener(jupiter, 'mouseout', event => {document.getElementById("jupiter").style.display = "none"})
+            
+            domEvents.addEventListener(saturn, 'mouseover', event => {document.getElementById("saturn").style.display = "block"})
+            domEvents.addEventListener(saturn, 'mouseout', event => {document.getElementById("saturn").style.display = "none"})
+            
+            domEvents.addEventListener(uranus, 'mouseover', event => {document.getElementById("uranus").style.display = "block"})
+            domEvents.addEventListener(uranus, 'mouseout', event => {document.getElementById("uranus").style.display = "none"})
+            
+            domEvents.addEventListener(neptune, 'mouseover', event => {document.getElementById("neptune").style.display = "block"})
+            domEvents.addEventListener(neptune, 'mouseout', event => {document.getElementById("neptune").style.display = "none"})
+
+            render();
+        }
+
+        //SETUP SCENE
+        function createScene() {
+            // Create the Three.js renderer
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+
+            //show canvas
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            // Create a new Three.js scene
+            scene = new THREE.Scene();
+            // Add  a camera so we can view the scene
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 4000);
+            camera.position.z = 7;
+            scene.add(camera);
+
+            //OrbitControls Camera Movement
+            let controls = new THREE.OrbitControls(camera);
+            controls.addEventListener('change', function () { renderer.render(scene, camera); });
+
+            //ThreeX DOMEvents - Add Event Listeners to any Mesh
+            domEvents = new THREEx.DomEvents(camera,renderer.domElement)
+            
+
+            //MAIN LIGHT
+            let light = new THREE.DirectionalLight();
+            light.position.set(-250, 100, 5);
+            scene.add(light);
+            light.shadow.mapSize.width = 2048;
+            light.shadow.mapSize.height = 2048;
+            light.castShadow = true;
+
+            // Add a ambient light
+            light1 = new THREE.AmbientLight(0x333333, 0.3);
+            scene.add(light1);
+        }
+        
+        //EARTH
+        function createEarth() {
+            // Create the sphere geometry
+            let geometry = new THREE.SphereGeometry(1, 32, 32);
+
+            // Create a texture phong material for the sphere, with map and bumpMap textures
+            map = new THREE.TextureLoader().load('earth.jpg');
+            bumpmap = new THREE.TextureLoader().load('images/elev_bump_4k.jpg');
+            specmap = new THREE.TextureLoader().load('earthSpecular.jpg');
+            material = new THREE.MeshPhongMaterial({
+                map: map,
+                specularMap: specmap,
+                bumpMap: bumpmap,
+                bumpScale: 0.03
+            });
+            // And put the geometry and material together into a mesh
+            sphere = new THREE.Mesh(geometry, material);
+            // Now add the sphere to our scene
+            scene.add(sphere);
+
+
+            //sphere for the clouds
+            let cloudGeometry = new THREE.SphereGeometry(1.01, 32, 32);
+            let cloudMap = new THREE.TextureLoader().load('clouds.png');
+            let cloudMaterial = new THREE.MeshPhongMaterial({ map: cloudMap, transparent: true });
+            cloudSphere = new THREE.Mesh(cloudGeometry, cloudMaterial);
+            scene.add(cloudSphere);
+            //shading set
+            cloudSphere.castShadow = true;
+            cloudSphere.receiveShadow = true;
+            sphere.castShadow = true;
+            sphere.receiveShadow = true; 
+            
+            //sphere for the starfield
+            let stars = new THREE.Mesh(
+                new THREE.SphereGeometry(1000, 64, 64),
+                new THREE.MeshBasicMaterial({
+                    map: new THREE.TextureLoader().load('background.jpg'),
+                    side: THREE.BackSide
+                })
+            );
+            scene.add(stars);
+        }
+
+        //FINAL RENDERING
+        function render() {
+            requestAnimationFrame(render);
+            // Rotate the spheres (earth and clouds) about their Y axis
+            sphere.rotation.y += 0.0005;
+            cloudSphere.rotation.y += 0.00055;
+            mercury.rotation.y += 0.00055;
+            sun.rotation.y += 0.00005;
+            venus.rotation.y += 0.0008;
+            mars.rotation.y += 0.001;
+            jupiter.rotation.y += 0.0008;
+            saturn.rotation.y += 0.0008;
+            uranus.rotation.y += 0.0008;
+            neptune.rotation.y += 0.0008;
+            //moon's orbit around the earth
+            orbitSpeed += 0.0005;
+            moon.position.x = 4*Math.cos(orbitSpeed);
+            moon.position.z = 4*Math.sin(orbitSpeed);
+            //pace of rotation to keep the moon face synchronous with the earth
+            moon.rotation.y += -0.0005
+            renderer.render(scene, camera);
+        }
+        
+    </script>
+</head>
+
+<body>
+    <div id="canvas-container" style="position: absolute; left:0px; top:0px;">
+        <div id="title" style="left: 90%; text-align: center; position: absolute; border: 1px solid white; color: white; padding: 10px; font-family: 'Bungee', cursive;">
+            <p style="font-size: 24px;">Skywalker</p> <hr>
+            <p style="font-family: 'Titillium Web', sans-serif; font-size: 12px;">Interactive and Dynamic Solar System Infograph</p>
+        </div>
+        <div id="earth" style="text-align: center; max-width: 400px; position: absolute; border: 1px solid white; color: white; padding: 10px; display:none; font-family: 'Titillium Web', sans-serif;">
+            <p style="font-size: 24px;">Earth</p> <hr>
+            <p>Radius: 6371km</p>
+            <p>Mass: 5,972 × 10^24 kg</p>
+            <p>Distance to the Sun: 149 600 000 km</p>
+            <p>Orbital Period: 365 days</p>
+            <p>Surface Pressure: 101.325 kPa</p>
+            <p>Population: 7 799 466 683</p>
+            <p>Age: 4.54 Billion Years</p> <hr>
+            <p>Earth is the third planet from the Sun and the only astronomical object known to harbor life.</p>
+        </div>
+        <div id="sun" style="text-align: center; max-width: 400px; position: absolute; border: 1px solid white; color: white; padding: 10px; display:none; font-family: 'Titillium Web', sans-serif;">
+            <p style="font-size: 24px;">Sun</p> <hr>
+            <p>Radius: 696 340 km</p>
+            <p>Mass: 1,989 × 10^30 kg</p>
+            <p>Surface Temperature: 5 778 K</p>
+            <p>Surface Pressure: 101.325 kPa</p>
+            <p>G-type main-sequence star (G2V)</p>
+            <p>Age: 4.6 Billion Years</p> <hr>
+            <p>The Sun is the star at the center of the Solar System. It is a nearly perfect sphere of hot plasma,[18][19] with internal convective motion that generates a magnetic field via a dynamo process.[20] It is by far the most important source of energy for life on Earth.</p>
+        </div>
+        <div id="mercury" style="text-align: center; max-width: 400px; position: absolute; border: 1px solid white; color: white; padding: 10px; display:none; font-family: 'Titillium Web', sans-serif;">
+            <p style="font-size: 24px;">Mercury</p> <hr>
+            <p>Radius: 2439.7km</p>
+            <p>Mass: 3,285 × 10^23 kg</p>
+            <p>Distance to the Sun: 57 910 000 km</p>
+            <p>Orbital Period: 87,969 days</p>
+            <p>Surface Temperature: 100K(Night)-700K(Day)</p>
+            <p>Day Duration: 58d 15h 30m</p>
+            <p>Age: 4.6 Billion Years</p> <hr>
+            <p>Mercury is the smallest and innermost planet in the Solar System. Its orbit around the Sun takes 87.97 days, the shortest of all the planets in the Solar System. It is named after the Roman deity Mercury, the messenger of the gods.</p>
+        </div>
+        <div id="venus" style="text-align: center; max-width: 400px; position: absolute; border: 1px solid white; color: white; padding: 10px; display:none; font-family: 'Titillium Web', sans-serif;">
+            <p style="font-size: 24px;">Venus</p> <hr>
+            <p>Radius: 6051,8km</p>
+            <p>Mass: 4,867 × 10^24 kg</p>
+            <p>Distance to the Sun: 108 000 000 km</p>
+            <p>Orbital Period: 225 days</p>
+            <p>Surface Pressure: 91 atm</p>
+            <p>Day Duration: 116d 18h</p>
+            <p>Age: 4.54 Billion Years</p> <hr>
+            <p>Venus is the second planet from the Sun. It is named after the Roman goddess of love and beauty. As the second-brightest natural object in the night sky after the Moon, Venus can cast shadows and can be, on rare occasion, visible to the naked eye in broad daylight.</p>
+        </div>
+        <div id="moon" style="text-align: center; max-width: 400px; position: absolute; border: 1px solid white; color: white; padding: 10px; display:none; font-family: 'Titillium Web', sans-serif;">
+            <p style="font-size: 24px;">Moon</p> <hr>
+            <p>Radius: 1737,4 km</p>
+            <p>Mass: 7.342 × 10^22 kg </p>
+            <p>Orbital Period: 27 days</p>
+            <p>Surface Pressure: 101.325 kPa</p>
+            <p>Distance from the Earth: 384 400 km</p>
+            <p>Age: 4.53 Billion Years</p> <hr>
+            <p>The Moon is an astronomical body orbiting Earth and is the planet's only natural satellite. It is the fifth-largest satellite in the Solar System, and by far[13] the largest among planetary satellites relative to the size of the planet that it orbits.</p>
+        </div>
+        <div id="mars" style="text-align: center; max-width: 400px; position: absolute; border: 1px solid white; color: white; padding: 10px; display:none; font-family: 'Titillium Web', sans-serif;">
+            <p style="font-size: 24px;">Mars</p> <hr>
+            <p>Radius: 3389.5 km</p>
+            <p>Mass: 6,4171 × 10^23 kg</p>
+            <p>Distance to the Sun: 230 000 000 km</p>
+            <p>Orbital Period: 686 days</p>
+            <p>Surface Pressure: 0.00628 atm</p>
+            <p>Surface Temperature: 130K(Night)-308K(Day)</p>
+            <p>Age: 4.6 Billion Years</p> <hr>
+            <p>Mars is the fourth planet from the Sun and the second-smallest planet in the Solar System, being only larger than Mercury. In English, Mars carries the name of the Roman god of war and is often referred to as the "Red Planet". The latter refers to the effect of the iron oxide prevalent on Mars' surface, which gives it a reddish appearance distinctive among the astronomical bodies visible to the naked eye.</p>
+        </div>
+        <div id="jupiter" style="text-align: center; max-width: 400px; position: absolute; border: 1px solid white; color: white; padding: 10px; display:none; font-family: 'Titillium Web', sans-serif;">
+            <p style="font-size: 24px;">Jupiter</p> <hr>
+            <p>Radius: 69 911 km</p>
+            <p>Mass: 1.8982 × 10^27 kg </p>
+            <p>Distance to the Sun: 778 000 000 km</p>
+            <p>Orbital Period: 12 years</p>
+            <p>Surface Pressure: 20–200 kPa</p>
+            <p>Known Moons: 79</p>
+            <p>Age: 4.56 Billion Years</p> <hr>
+            <p>Jupiter is the fifth planet from the Sun and the largest in the Solar System. It is a gas giant with a mass one-thousandth that of the Sun, but two-and-a-half times that of all the other planets in the Solar System combined. Jupiter is one of the brightest objects visible to the naked eye in the night sky, and has been known to ancient civilizations since before recorded history.</p>
+        </div>
+        <div id="saturn" style="text-align: center; max-width: 400px; position: absolute; border: 1px solid white; color: white; padding: 10px; display:none; font-family: 'Titillium Web', sans-serif;">
+            <p style="font-size: 24px;">Saturn</p> <hr>
+            <p>Radius: 58 232 km</p>
+            <p>Mass: 5.6834 × 10^26 kg</p>
+            <p>Distance to the Sun: 1,4 Billion km</p>
+            <p>Orbital Period: 29 years</p>
+            <p>Surface Pressure: 140 kPa</p>
+            <p>Known Moons: 82</p>
+            <p>Age: 4.6 Billion Years</p> <hr>
+            <p>Saturn is the sixth planet from the Sun and the second-largest in the Solar System, after Jupiter. It is a gas giant with an average radius of about nine times that of Earth. It only has one-eighth the average density of Earth; however, with its larger volume, Saturn is over 95 times more massive.</p>
+        </div>
+        <div id="uranus" style="text-align: center; max-width: 400px; position: absolute; border: 1px solid white; color: white; padding: 10px; display:none; font-family: 'Titillium Web', sans-serif;">
+            <p style="font-size: 24px;">Uranus</p> <hr>
+            <p>Radius: 25 362km</p>
+            <p>Mass: 8,6810 × 10^25 kg</p>
+            <p>Distance to the Sun: 3 Billion km</p>
+            <p>Orbital Period: 84 years</p>
+            <p>Temperature: 49 K (Coldest in the System)</p>
+            <p>Known Moons: 27</p>
+            <p>Age: 4.54 Billion Years</p> <hr>
+            <p>Uranus is the seventh planet from the Sun. It has the third-largest planetary radius and fourth-largest planetary mass in the Solar System. Uranus is similar in composition to Neptune, and both have bulk chemical compositions which differ from that of the larger gas giants Jupiter and Saturn. For this reason, scientists often classify Uranus and Neptune as "ice giants" to distinguish them from the gas giants.</p>
+        </div>
+        <div id="neptune" style="text-align: center; max-width: 400px; position: absolute; border: 1px solid white; color: white; padding: 10px; display:none; font-family: 'Titillium Web', sans-serif;">
+            <p style="font-size: 24px;">Neptune</p> <hr>
+            <p>Radius: 24 622 km</p>
+            <p>Mass: 1,024 × 10^26 kg</p>
+            <p>Distance to the Sun: 4.5 Billion km</p>
+            <p>Orbital Period: 164.8 years</p>
+            <p>Temperature: 55 K</p>
+            <p>Known Moons: 13</p>
+            <p>Age: 4.54 Billion Years</p> <hr>
+            <p>Neptune is the eighth and farthest-known planet from the Sun in the Solar System. In the Solar System, it is the fourth-largest planet by diameter, the third-most-massive planet, and the densest giant planet. Neptune is not visible to the unaided eye and is the only planet in the Solar System found by mathematical prediction rather than by empirical observation.</p>
+        </div>
+    </div>
+</body>
+</html>
